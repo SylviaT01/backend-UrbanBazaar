@@ -587,7 +587,7 @@ def add_payment_method():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'error': 'An error occurred on the server'}), 500
-#@app.route('/create-payment', methods=['POST'])
+@app.route('/create-payment', methods=['POST'])
 @jwt_required()
 def create_payment():
     try:
