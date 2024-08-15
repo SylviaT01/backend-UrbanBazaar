@@ -598,8 +598,8 @@ def create_payment():
             "intent": "sale",
             "payer": {"payment_method": "paypal"},
             "redirect_urls": {
-                "return_url": "http://localhost:3000/execute-payment",
-                "cancel_url": "http://localhost:3000"
+                "return_url": "https://urban-bazaar-a3m5.vercel.app//execute-payment",
+                "cancel_url": "https://urban-bazaar-a3m5.vercel.app/"
             },
             "transactions": [{
                 "item_list": {
