@@ -548,18 +548,18 @@ def create_order():
     data = request.get_json()
 
     # Validate shipping and payment data
-    shipping_address = data.get('shipping_address')
+    shipping_details = data.get('shipping_details')
     payment_method = data.get('payment_method')
     order_total = data.get('order_total')
 
-    if not all([shipping_address, payment_method, order_total]):
+    if not all([shipping_details, payment_method, order_total]):
         return jsonify({'message': 'Missing data'}), 400
 
     try:
         # Create new order
         new_order = Order(
             user_id=user.id,
-            shipping_address=shipping_address,
+            shipping_details=shipping_details,
             payment_method=payment_method,
             order_total=order_total
         )
@@ -621,7 +621,7 @@ def get_orders():
             'id': order.id,
             'user': user_data,
             'order_date': order.order_date,
-            'shipping_address': order.shipping_address,
+            'shipping_details': order.shipping_details,
             'payment_method': order.payment_method,
             'order_total': order.order_total,
             'status': order.status,
