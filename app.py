@@ -522,7 +522,7 @@ def get_all_orders():
             'id': order.id,
             'user_id': order.user_id,
             'user_email': user.email,  # Include the user's email
-            'shipping_address': order.shipping_address,
+            'shipping_details': order.shipping_details,
             'payment_method': order.payment_method,
             'order_total': order.order_total,
             'created_at': order.order_date,
