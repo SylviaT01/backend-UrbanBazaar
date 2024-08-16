@@ -621,7 +621,7 @@ def get_orders():
             'id': order.id,
             'user': user_data,
             'order_date': order.order_date,
-            'shipping_details': order.shipping_details,
+            # 'shipping_details': order.shipping_details,
             # 'payment_method': order.payment_method,
             'order_total': order.order_total,
             'status': order.status,
