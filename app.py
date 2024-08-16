@@ -509,6 +509,131 @@ def remove_from_cart(product_id):
 
     return jsonify({'message': 'Product removed from cart successfully'})
 
+
+@app.route('/admin/orders', methods=['GET'])
+# @jwt_required()
+# @admin_required
+def get_all_orders():
+    orders = db.session.query(Order, User).join(User, Order.user_id == User.id).all()
+    output = []
+
+    for order, user in orders:
+        order_data = {
+            'id': order.id,
+            'user_id': order.user_id,
+            'user_email': user.email,  # Include the user's email
+            'shipping_address': order.shipping_address,
+            'payment_method': order.payment_method,
+            'order_total': order.order_total,
+            'created_at': order.order_date,
+            'status': order.status
+            
+            # 'updated_at': order.updated_at
+        }
+        output.append(order_data)
+
+    return jsonify({'orders': output})
+
+
+
+@app.route('/orders', methods=['POST'])
+@jwt_required()
+def create_order():
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(id=current_user).first()
+
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    data = request.get_json()
+
+    # Validate shipping and payment data
+    shipping_address = data.get('shipping_address')
+    payment_method = data.get('payment_method')
+    order_total = data.get('order_total')
+
+    if not all([shipping_address, payment_method, order_total]):
+        return jsonify({'message': 'Missing data'}), 400
+
+    try:
+        # Create new order
+        new_order = Order(
+            user_id=user.id,
+            shipping_address=shipping_address,
+            payment_method=payment_method,
+            order_total=order_total
+        )
+        db.session.add(new_order)
+        db.session.commit()
+
+        # Process items from the shopping cart
+        cart_items = ShoppingCart.query.filter_by(user_id=user.id).all()
+        for item in cart_items:
+            new_order_item = OrderItem(
+                order_id=new_order.id,
+                product_id=item.product_id,
+                quantity=item.quantity,
+                price=item.price
+            )
+            db.session.add(new_order_item)
+            db.session.delete(item)
+
+        db.session.commit()
+        return jsonify({'message': 'Order created successfully'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
+
+
+
+@app.route('/order', methods=['GET'])
+def get_orders():
+    # Fetch orders along with associated users and products
+    orders = db.session.query(Order).all()
+    orders_data = []
+
+    for order in orders:
+        # Fetch the order items for the current order
+        order_items = OrderItem.query.filter_by(order_id=order.id).all()
+        
+        # Build order item details including product info
+        items_data = []
+        for item in order_items:
+            product = Product.query.get(item.product_id)
+            if product:
+                product_data = {
+                    'product_id': product.id,
+                    'title': product.title,
+                    'images': product.images,  # List of image URLs
+                    'price': item.price,
+                    'quantity': item.quantity
+                }
+                items_data.append(product_data)
+
+        # Get user info
+        user = User.query.get(order.user_id)
+        user_data = {
+            'username': user.username if user else 'Unknown User'
+        }
+
+        # Build order details
+        order_data = {
+            'id': order.id,
+            'user': user_data,
+            'order_date': order.order_date,
+            'shipping_address': order.shipping_address,
+            'payment_method': order.payment_method,
+            'order_total': order.order_total,
+            'status': order.status,
+            'items': items_data
+        }
+        
+        orders_data.append(order_data)
+
+    return jsonify(orders_data)
+
+
+
 @app.route('/shipping', methods=['POST'])
 @jwt_required()
 def add_shipping_details():
